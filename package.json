@@ -5,7 +5,7 @@
   },
   "scripts": {
     "install": "npm install tailwindcss @tailwindcss/cli",
-    "dev": "npx @tailwindcss/cli -i ./style/input.css -o ./style/main.css --watch",
+    "dev": "npx @tailwindcss/cli -i ./style/input.css -o ./style/login.css --watch",
     "fix": "npx @tailwindcss/cli -o ./style/output.css --minify"
   }
 }

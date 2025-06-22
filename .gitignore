@@ -4,6 +4,7 @@ __pycache__/
 .Python/
 env/
 venv/
+tempCodeRunnerFile.py
 
 # Node.js specific ignores
 node_modules/

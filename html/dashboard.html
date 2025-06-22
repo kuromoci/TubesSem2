@@ -3,60 +3,418 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard</title>
-  <!-- <link  href="{{ url_for('static', filename='main.css') }}" rel="stylesheet"> -->
-  <link href="../style/main.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
-</head>
-<body class="bg-zinc-200 font-[inter] overflow-hidden">
-  <nav class="flex flex-row justify-between items-center text-neutral-200 bg-neutral-900 h-15
-  px-4 py-2">
-      <div class="w-auto">
-        <h1 class="font-bold text-2xl">Smart Energy Monitoring</h1>
-      </div>
-      <div class="flex justify-center items-center space-x-4">
-        <!-- <a href="{{ url_for(logout) }}" class="text-neutral-900 hover:bg-neutral-300 p-2 text-2xl transition duration-200 ease-in-out">
-          <i class="fa-solid fa-moon"></i>
-        </a> -->
-        <a href="{{ url_for(logout) }}" class="text-neutral-200 hover:text-gray-400 text-2xl transition duration-200 ease-in-out">
-          <i class="fa-solid fa-right-from-bracket">
+  <title>Dashboard - Smart Energy Monitoring</title>
+  
+  <link href="{{ url_for('static', filename='main.css') }}" rel="stylesheet">
+  <!-- <link href="../style/main.css" rel="stylesheet"> -->
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6TaYgqgpfmYVft+tvUfpecsGaQfaIIkwdVNnSfNTw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
 
-          </i>
-        </a>
-      </div>
+  <style>
+    .w-auto { width: auto; } 
+    .h-50 { height: 12.5rem; } 
+    .h-100 { height: 25rem; } 
+    .h-160 { height: 40rem; } 
+    .pt-4-25 { padding-top: 1.0625rem; } 
+    
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #3B82F6; 
+      cursor: pointer;
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #3B82F6; 
+      cursor: pointer;
+    }
+    input[type="range"] {
+        height: 8px;
+        background: #D1D5DB; 
+        border-radius: 5px;
+        outline: none;
+        transition: opacity .2s;
+        -webkit-appearance: none;
+        appearance: none;
+    }
+    .relay-on-btn { background-color: #22C55E; }
+    .relay-on-btn:hover { background-color: #16A34A; }
+    .relay-off-btn { background-color: #EF4444; }
+    .relay-off-btn:hover { background-color: #DC2626; }
+    .relay-status-on { background-color: #DCFCE7; color: #15803D; } 
+    .relay-status-off { background-color: #FEE2E2; color: #B91C1C; } 
+
+  </style>
+</head>
+<body class="bg-neutral-800 font-[inter] overflow-hidden flex flex-col min-h-svh">
+  <nav class="flex flex-row justify-between items-center text-neutral-200 bg-neutral-900 h-15 px-4 py-2">
+    <div class="w-auto">
+      <h1 class="font-bold text-2xl">Smart Energy Monitoring</h1>
+    </div>
+    <div class="flex justify-center items-center space-x-4">
+      <a href="{{ url_for('logout') }}" class="text-neutral-200 hover:text-gray-400 text-2xl transition duration-200 ease-in-out">
+        <i class="fa-solid fa-right-from-bracket"></i>
+      </a>
+    </div>
   </nav>
 
-  <div class="bg-neutral-800 min-h-svh pt-20 text-center text-neutral-200 font-bold" >
-    <div class="grid grid-cols-6 gap-x-10 gap-y-4 pt-5 px-20 w-full h-160">
-      <div class="col-span-2 bg-neutral-900 w-auto h-50 rounded-2xl pt-4">
-        <span>VOLTAGE</span>
+  <div class="bg-neutral-800 flex-grow pt-10 text-center text-neutral-200 font-bold overflow-y-auto"> <h1 class="text-3xl mb-6">DASHBOARD MONITORING</h1>
+    <div class="grid grid-cols-6 gap-x-10 gap-y-4 px-20 w-full h-160 mx-auto">
+      
+      <div class="col-span-2 bg-neutral-900 w-auto h-50 rounded-2xl pt-4 flex flex-col justify-between items-center p-4">
+        <span class="text-xl">VOLTAGE</span>
+        <h2 id="liveVoltage" class="text-5xl font-bold text-blue-400 my-auto">{{ data.load_voltage | default(0.0) | round(2) }} V</h2>
+        <span class="text-sm text-gray-400">Battery Voltage</span>
       </div>
-      <div class="col-span-2 bg-neutral-900 w-auto h-50 rounded-2xl pt-4">
-        <span>CURRENT</span>
+      
+      <div class="col-span-2 bg-neutral-900 w-auto h-50 rounded-2xl pt-4 flex flex-col justify-between items-center p-4">
+        <span class="text-xl">CURRENT</span>
+        <h2 id="liveCurrent" class="text-5xl font-bold text-green-400 my-auto">{{ data.current_mA | default(0.0) | round(2) }} mA</h2>
+        <span class="text-sm text-gray-400">Battery Current</span>
       </div>
-      <div class="col-span-2 bg-neutral-900 w-auto h-50 rounded-2xl pt-4">
-        <span>POWER</span>
+      
+      <div class="col-span-2 bg-neutral-900 w-auto h-50 rounded-2xl pt-4 flex flex-col justify-between items-center p-4">
+        <span class="text-xl">POWER</span>
+        <h2 id="livePower" class="text-5xl font-bold text-amber-400 my-auto">{{ data.power_W | default(0.0) | round(2) }} W</h2>
+        <span class="text-sm text-gray-400">Battery Power</span>
       </div>
-      <div class="col-span-4 bg-neutral-900 w-auto h-100 rounded-2xl pt-4">
-        <span>GRAPH</span>
+      
+      <div class="col-span-4 bg-neutral-900 w-auto h-120 rounded-2xl pt-4 p-5 flex flex-col">
+        <span class="text-xl mb-4">GRAPH (Voltage, Current, Power)</span>
+        <div class="relative flex-grow">
+            <canvas id="energyChart"></canvas>
+        </div>
       </div>
-      <div class="col-span-2 grid grid-rows-2 gap-4 h-100 ">
-        <div class="bg-neutral-900 w-auto h-full rounded-2xl pt-4">
-          <h1>THRESOLD</h1>
-          
+      
+      <div class="col-span-2 grid grid-rows-2 gap-4 h-120 ">
+        <div class="bg-neutral-900 w-auto h-full rounded-2xl pt-4 p-5 flex flex-col justify-between">
+          <h1 class="text-xl mb-4">THRESHOLD CONTROL</h1>
+          <form id="outputControlForm" class="flex flex-col flex-grow justify-around">
+            <div class="mb-1">
+                <label for="voltage_slider" class="block text-neutral-300 text-lg font-medium mb-2">Target Voltage (V):</label>
+                <input type="range" id="voltage_slider" name="voltage"
+                       min="3.0" max="9.0" step="0.1"
+                       value="{{ data.target_voltage | default(3.0) }}"
+                       class="w-full">
+                <output id="voltageOutput" class="text-blue-400 text-xl font-bold mt-2">{{ data.target_voltage | default(3.0) | round(1) }} V</output>
+            </div>
+            
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 ease-in-out">
+                Set Output
+            </button>
+            <span id="outputControlMessage" class="text-xs mt-2"></span>
+          </form>
+        </div>
+        
+        <div class="bg-neutral-900 w-auto h-full rounded-2xl pt-4 p-5 flex flex-col justify-between items-center">
+            <h1 class="text-xl">RELAY CONTROL</h1>
+            <div class="flex flex-col items-center gap-4 my-auto">
+                <span id="relayStatusDisplay" class="text-xl font-bold mb-2 
+                    {% if data.relay_status == 'ON' %} relay-status-on
+                    {% else %} relay-status-off {% endif %} px-4 py-2 rounded-full">
+                    STATUS: {{ data.relay_status | default('OFF') }}
+                </span>
+                <div class="flex space-x-4">
+                    <button onclick="controlRelay('on')" class="relay-on-btn text-white font-bold py-2 px-4 rounded-lg transition duration-200 ease-in-out">
+                        Turn ON
+                    </button>
+                    <button onclick="controlRelay('off')" class="relay-off-btn text-white font-bold py-2 px-4 rounded-lg transition duration-200 ease-in-out">
+                        Turn OFF
+                    </button>
+                </div>
+            </div>
+            <span id="relayControlMessage" class="text-xs mt-2"></span>
+        </div>
       </div>
-      <div class="bg-neutral-900 w-auto h-full rounded-2xl pt-4">
-          POWER
-      </div>
-      </div>
-
     </div>
   </div>
 
-  <footer class="bottom-0 absolute bg-neutral-900 w-full h-15">
-    <div class="text-center text-neutral-200 pt-4.25">
+  <footer class="bg-neutral-900 w-full h-15 flex items-center justify-center">
+    <div class="text-center text-neutral-200 pt-1">
       Tugas Besar - Pemrograman II
     </div>
   </footer>
+
+  <script>
+    const esp32Ip = "{{ esp32_ip }}"; 
+    
+    const dataDisplayElements = {
+        busVoltage: document.getElementById('liveVoltage'),
+        current_mA: document.getElementById('liveCurrent'),
+        power: document.getElementById('livePower'), 
+        relayStatus: document.getElementById('relayStatusDisplay'),
+        voltageOutput: document.getElementById('voltageOutput'), 
+        // Hapus currentOutput
+        displayTargetVoltage: document.getElementById('voltage_slider'), 
+        // Hapus displayTargetCurrent
+    };
+    
+    const outputControlMessage = document.getElementById('outputControlMessage');
+    const relayControlMessage = document.getElementById('relayControlMessage');
+
+    const ctx = document.getElementById('energyChart').getContext('2d');
+    const chartData = {
+        labels: [], 
+        datasets: [
+            {
+                label: 'Voltage (V)',
+                data: [],
+                borderColor: 'rgb(59, 130, 246)', 
+                backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                tension: 0.1,
+                fill: false,
+                yAxisID: 'yVoltage'
+            },
+            {
+                label: 'Current (mA)',
+                data: [],
+                borderColor: 'rgb(34, 197, 94)', 
+                backgroundColor: 'rgba(34, 197, 94, 0.2)',
+                tension: 0.1,
+                fill: false,
+                yAxisID: 'yCurrent'
+            },
+            {
+                label: 'Power (W)',
+                data: [],
+                borderColor: 'rgb(245, 158, 11)', 
+                backgroundColor: 'rgba(245, 158, 11, 0.2)',
+                tension: 0.1,
+                fill: false,
+                yAxisID: 'yPower'
+            }
+        ]
+    };
+
+    const energyChart = new Chart(ctx, {
+        type: 'line',
+        data: chartData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    type: 'time', 
+                    time: {
+                        unit: 'second', 
+                        displayFormats: {
+                            second: 'HH:mm:ss' 
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Time',
+                        color: '#A0AEC0' 
+                    },
+                    ticks: {
+                        color: '#A0AEC0' 
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)' 
+                    }
+                },
+                yVoltage: {
+                    type: 'linear',
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Voltage (V)',
+                        color: '#3B82F6' 
+                    },
+                    min: 0, 
+                    max: 10,
+                    ticks: {
+                        color: '#A0AEC0' 
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                },
+                yCurrent: {
+                    type: 'linear',
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'Current (mA)',
+                        color: '#22C55E' 
+                    },
+                    min: 0,
+                    max: 1500, 
+                    ticks: {
+                        color: '#A0AEC0'
+                    },
+                    grid: {
+                        drawOnChartArea: false, 
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                },
+                yPower: {
+                    type: 'linear',
+                    position: 'right', 
+                    title: {
+                        display: true,
+                        text: 'Power (W)',
+                        color: '#F59E0B' 
+                    },
+                    min: 0,
+                    max: 10, 
+                    ticks: {
+                        color: '#A0AEC0'
+                    },
+                    grid: {
+                        drawOnChartArea: false,
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#A0AEC0' 
+                    }
+                }
+            }
+        }
+    });
+
+    // Handle form submission for output control
+    document.getElementById('outputControlForm').addEventListener('submit', async function(event) {
+        event.preventDefault(); 
+
+        const formData = new FormData(this);
+        const dataToSend = {
+            voltage: parseFloat(formData.get('voltage')),
+            // Hapus current dari dataToSend
+        };
+
+        await sendCommand('/update_output_params', dataToSend, outputControlMessage);
+    });
+
+    // Handle relay control buttons
+    async function controlRelay(status) {
+        const dataToSend = { status: status };
+        await sendCommand('/control_relay', dataToSend, relayControlMessage);
+    }
+
+    // Generic function to send commands to Flask API
+    async function sendCommand(endpoint, data, messageElement) {
+        messageElement.textContent = 'Sending...';
+        messageElement.className = 'text-center text-xs mt-2 text-yellow-500'; 
+
+        try {
+            const response = await fetch(`http://${window.location.host}${endpoint}`, { 
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+            if (response.ok) {
+                messageElement.textContent = result.message || 'Command sent successfully!';
+                messageElement.className = 'text-center text-xs mt-2 text-green-500'; 
+            } else {
+                messageElement.textContent = 'Error: ' + (result.error || response.statusText);
+                messageElement.className = 'text-center text-xs mt-2 text-red-500'; 
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            messageElement.textContent = 'Network error or ESP32 not reachable.';
+            messageElement.className = 'text-center text-xs mt-2 text-red-500'; 
+        }
+        setTimeout(() => messageElement.textContent = '', 3000); 
+    }
+
+    // Function to fetch live data from Flask backend regularly
+    async function getLiveData() {
+        try {
+            const response = await fetch(`http://${window.location.host}/get_live_data`); 
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            
+            // Update live data display
+            dataDisplayElements.busVoltage.textContent = data.load_voltage.toFixed(2) + ' V'; 
+            dataDisplayElements.current_mA.textContent = data.current_mA.toFixed(2) + ' mA';
+            dataDisplayElements.power.textContent = data.power_W.toFixed(2) + ' W'; 
+            
+            // Update relay status display
+            dataDisplayElements.relayStatus.textContent = 'STATUS: ' + data.relay_status;
+            dataDisplayElements.relayStatus.classList.remove('relay-status-on', 'relay-status-off');
+            if (data.relay_status === 'ON') {
+                dataDisplayElements.relayStatus.classList.add('relay-status-on');
+            } else {
+                dataDisplayElements.relayStatus.classList.add('relay-status-off');
+            }
+
+            // Update slider output displays and position
+            // Menggunakan data langsung dari Flask/ESP32 untuk nilai slider
+            // Pastikan data.target_voltage tidak undefined/None
+            if (typeof data.target_voltage !== 'undefined' && data.target_voltage !== null) {
+                dataDisplayElements.voltageOutput.value = parseFloat(data.target_voltage).toFixed(1) + ' V';
+                dataDisplayElements.displayTargetVoltage.value = data.target_voltage; 
+            } else {
+                dataDisplayElements.voltageOutput.value = 'N/A';
+                dataDisplayElements.displayTargetVoltage.value = 0; // Set ke 0 atau min default
+            }
+
+            // Hapus update untuk slider current
+            
+            // Add data to chart
+            const now = new Date();
+            chartData.labels.push(now);
+            chartData.datasets[0].data.push(data.load_voltage);
+            chartData.datasets[1].data.push(data.current_mA);
+            chartData.datasets[2].data.push(data.power_W); 
+            
+            // Batasi jumlah data di grafik untuk performa
+            const maxDataPoints = 30; 
+            if (chartData.labels.length > maxDataPoints) {
+                chartData.labels.shift();
+                chartData.datasets[0].data.shift();
+                chartData.datasets[1].data.shift();
+                chartData.datasets[2].data.shift();
+            }
+            
+            energyChart.update(); 
+            
+        } catch (error) {
+            console.error("Could not fetch live data:", error);
+            // Set display to N/A or show error
+            for (let key in dataDisplayElements) {
+                if (dataDisplayElements[key].id === 'liveVoltage' || dataDisplayElements[key].id === 'liveCurrent' || dataDisplayElements[key].id === 'livePower') {
+                    dataDisplayElements[key].textContent = 'N/A';
+                } else if (dataDisplayElements[key].id === 'relayStatusDisplay') {
+                    dataDisplayElements[key].textContent = 'STATUS: OFFLINE';
+                    dataDisplayElements[key].classList.remove('relay-status-on');
+                    dataDisplayElements[key].classList.add('relay-status-off');
+                } else if (dataDisplayElements[key].tagName === 'OUTPUT' && dataDisplayElements[key].id === 'voltageOutput') { // Hanya untuk output voltage
+                    dataDisplayElements[key].value = 'N/A';
+                }
+            }
+        }
+    }
+
+    // Set interval to fetch data every 3 seconds
+    setInterval(getLiveData, 3000); 
+    getLiveData(); // Fetch data immediately on page load
+
+    // Initial updates for slider output text when page loads (if not updated by live data fetch)
+    // PERBAIKAN: Hanya untuk slider voltage
+    const initialVoltageSliderValue = document.getElementById('voltage_slider').value;
+    
+    if (initialVoltageSliderValue) { // Pastikan ada nilai
+        dataDisplayElements.voltageOutput.value = parseFloat(initialVoltageSliderValue).toFixed(1) + ' V';
+    } else {
+        dataDisplayElements.voltageOutput.value = '0.0 V';
+    }
+  </script>
 </body>
 </html>
